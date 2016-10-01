@@ -3,108 +3,21 @@ package main
 import (
 	"fmt"
 	"github.com/Jeffail/gabs"
-	"github.com/spf13/cobra"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/exec"
-	"strings"
+	"github.com/philipgough/openshift-node-inspector/cmd"
 	"github.com/philipgough/openshift-node-inspector/utils"
+	"github.com/spf13/cobra"
+	"io/ioutil"
+	"strings"
 )
 
 const basePath string = "/tmp/oni/"
 
-func deploydebug() {
-
-}
 
 type DeploymentConfigPort struct {
-	Protocol   string `json:"protocol"`
-	Port       int    `json:"port"`
+	Protocol string `json:"protocol"`
+	Port     int    `json:"port"`
 }
 
-type ServicePort struct {
-	Name       string `json:"name"`
-	Protocol   string `json:"protocol"`
-	Port       int    `json:"port"`
-	TargetPort int    `json:"targetPort"`
-}
-
-func createDebugSvc(component string, port int) {
-
-	file, err := ioutil.ReadFile(basePath + component + "/cleansvc.json")
-	if err != nil {
-		panic(err)
-	}
-
-	jsonParsed, err := gabs.ParseJSON(file)
-	if err != nil {
-		panic(err)
-	}
-
-	children, _ := jsonParsed.S("spec", "ports").Children()
-	for _, child := range children {
-		myMap := child.Data()
-		dict, ok := myMap.(map[string]interface{})
-		if ok {
-			dict["name"] = component
-		}
-	}
-
-	nodeInspectorPort := ServicePort{Name: "node-inspector", Protocol: "TCP", Port: port, TargetPort: port}
-	jsonParsed.ArrayAppend(nodeInspectorPort, "spec", "ports")
-	writeOutFile(jsonParsed.String(), component, "svc")
-
-	deleteSvc, err := exec.Command("oc", "delete", "svc", component).Output()
-
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf(string(deleteSvc) + "  Creating new service ....")
-
-	createSvc, err := exec.Command("oc", "create", "-f", basePath + component + "/debugsvc.json").Output()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf(string(createSvc))
-}
-
-func writeOutFile(contents string, component string, objectType string) {
-
-	file, err := os.Create(basePath + component + "/debug" + objectType + ".json")
-
-	if err != nil {
-		panic(err)
-	}
-
-	n, err := io.WriteString(file, contents)
-
-	if err != nil {
-		fmt.Println(n)
-		panic(err)
-	}
-
-	file.Close()
-}
-
-func saveClean(component string, objectType string) {
-	cmd := exec.Command("oc", "get", objectType, component, "-o", "json")
-	os.MkdirAll(basePath + component, 0777)
-	outfile, err := os.Create(basePath + component + "/clean" + objectType + ".json")
-
-	if err != nil {
-		panic(err)
-	}
-
-	defer outfile.Close()
-	cmd.Stdout = outfile
-
-	err = cmd.Start()
-	if err != nil {
-		panic(err)
-	}
-	cmd.Wait()
-}
 
 
 func createDebugDc(component string, port int) {
@@ -118,7 +31,6 @@ func createDebugDc(component string, port int) {
 		panic(err)
 	}
 
-	//spec templates spec containers
 	containerPort := DeploymentConfigPort{Protocol: "TCP", Port: port}
 	jsonParsed.ArrayAppend(containerPort, "spec", "template", "spec", "containers", "ports")
 }
@@ -132,14 +44,14 @@ func main() {
 		Use:   "debug [component to debug]",
 		Short: "Debug component with Node Inspector",
 		Long:  `Debug allows you to debug Node components using Node Inspector`,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmnd *cobra.Command, args []string) {
 			objects := []string{"svc", "dc"}
 			for _, value := range objects {
 				utils.ValidateInput(args[0], value)
-				utils.SaveFile(args[0], value, "/clean")
+				utils.SaveCleanFile(args[0], value, "/clean")
 			}
-			createDebugSvc(args[0], debugPort)
-			createDebugDc(args[0], debugPort)
+			cmd.CreateDebugService(args[0], debugPort)
+			//createDebugDc(args[0], debugPort)
 		},
 	}
 
