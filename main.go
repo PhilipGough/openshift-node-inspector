@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"github.com/philipgough/openshift-node-inspector/utils"
 )
 
 const basePath string = "/tmp/oni/"
@@ -132,11 +133,11 @@ func main() {
 		Short: "Debug component with Node Inspector",
 		Long:  `Debug allows you to debug Node components using Node Inspector`,
 		Run: func(cmd *cobra.Command, args []string) {
-			//To do verify that arg[o] exists in oc get dc awk print $1
-
-			fmt.Println(debugPort)
-			saveClean(args[0], "dc")
-			saveClean(args[0], "svc")
+			objects := []string{"svc", "dc"}
+			for _, value := range objects {
+				utils.ValidateInput(args[0], value)
+				utils.SaveFile(args[0], value, "/clean")
+			}
 			createDebugSvc(args[0], debugPort)
 			createDebugDc(args[0], debugPort)
 		},
