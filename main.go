@@ -2,38 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/Jeffail/gabs"
 	"github.com/philipgough/openshift-node-inspector/cmd"
 	"github.com/philipgough/openshift-node-inspector/utils"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 	"strings"
 )
-
-const basePath string = "/tmp/oni/"
-
-
-type DeploymentConfigPort struct {
-	Protocol string `json:"protocol"`
-	Port     int    `json:"port"`
-}
-
-
-
-func createDebugDc(component string, port int) {
-	file, err := ioutil.ReadFile(basePath + component + "/cleandc.json")
-	if err != nil {
-		panic(err)
-	}
-
-	jsonParsed, err := gabs.ParseJSON(file)
-	if err != nil {
-		panic(err)
-	}
-
-	containerPort := DeploymentConfigPort{Protocol: "TCP", Port: port}
-	jsonParsed.ArrayAppend(containerPort, "spec", "template", "spec", "containers", "ports")
-}
 
 func main() {
 
@@ -45,13 +18,15 @@ func main() {
 		Short: "Debug component with Node Inspector",
 		Long:  `Debug allows you to debug Node components using Node Inspector`,
 		Run: func(cmnd *cobra.Command, args []string) {
-			objects := []string{"svc", "dc"}
+			//objects := []string{"svc", "dc"}
+			objects := []string{"dc"}
 			for _, value := range objects {
-				utils.ValidateInput(args[0], value)
+				//utils.ValidateInput(args[0], value)
 				utils.SaveCleanFile(args[0], value, "/clean")
 			}
-			cmd.CreateDebugService(args[0], debugPort)
-			//createDebugDc(args[0], debugPort)
+			cmd.CreateDebugDeploymentConfig(args[0], debugPort)
+			//cmd.CreateDebugService(args[0], debugPort)
+
 		},
 	}
 

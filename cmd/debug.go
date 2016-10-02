@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Jeffail/gabs"
-	"github.com/philipgough/openshift-node-inspector/utils"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"github.com/Jeffail/gabs"
+	"github.com/philipgough/openshift-node-inspector/utils"
 )
 
 type ServicePort struct {
@@ -16,19 +16,19 @@ type ServicePort struct {
 	TargetPort int    `json:"targetPort"`
 }
 
-const objectType string = "svc"
-
+var objectType string
 var component string
 var port int
 
 func CreateDebugService(nodeComponent string, debugPort int) {
+	objectType = "svc"
 	component = nodeComponent
 	port = debugPort
-	readCleanSvcFile()
+	createDebugSvcFile()
 
 }
 
-func readCleanSvcFile() {
+func createDebugSvcFile() {
 	defer deleteCleanObj()
 	file, err := ioutil.ReadFile(utils.GetFilePath(component, objectType, "/clean"))
 	if err != nil {
@@ -38,7 +38,8 @@ func readCleanSvcFile() {
 
 	jsonParsed, err := gabs.ParseJSON(file)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error parsing existing %s %s JSON file. Exiting ... \n", component, objectType)
+		os.Exit(2)
 	}
 
 	children, _ := jsonParsed.S("spec", "ports").Children()
@@ -54,6 +55,66 @@ func readCleanSvcFile() {
 	jsonParsed.ArrayAppend(nodeInspectorPort, "spec", "ports")
 
 	utils.WriteDebugFile(jsonParsed.String(), component, objectType)
+}
+
+func CreateDebugDeploymentConfig(nodeComponent string, debugPort int) {
+	objectType = "dc"
+	component = nodeComponent
+	port = debugPort
+	createDebugDcFile()
+
+}
+
+func createDebugDcFile() {
+	defer deleteCleanObj()
+
+	file, err := ioutil.ReadFile(utils.GetFilePath(component, objectType, "/clean"))
+	if err != nil {
+		fmt.Printf("Error reading %s file for %s. Exiting ...", objectType, component)
+		os.Exit(2)
+	}
+
+	jsonParsed, err := gabs.ParseJSON(file)
+	if err != nil {
+		fmt.Printf("Error parsing existing %s %s JSON file. Exiting ... \n", component, objectType)
+		os.Exit(2)
+	}
+
+	// Add the additional definitions to the ports Array
+	array, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("ports").Data().([]interface{})
+
+	if !ok {
+		fmt.Printf("Error parsing existing %s %s JSON file. Value not an array \n", component, objectType)
+		os.Exit(2)
+	}
+	niPortMap := map[string]interface{}{"containerPort": port, "protocol": "TCP"}
+	array = append(array, niPortMap)
+	debugListenerPortMap :=  map[string]interface{}{"containerPort": 5858, "protocol": "TCP"}
+	array = append(array, debugListenerPortMap)
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(array, "ports")
+
+	// Add the "cmd" Array to overwrite the Dockerfile CMD definition
+	commands := []string{"bash", "-c", "chmod +x /tmp/openshift-node-inspector/start.sh && /tmp/openshift-node-inspector/start.sh"}
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(commands, "cmd")
+
+	// Make the component name available as an environment variable to the container
+	envArray, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("env").Data().([]interface{})
+
+	if !ok {
+		fmt.Printf("Error parsing existing %s %s JSON file. Value not an array \n", component, objectType)
+		os.Exit(2)
+	}
+
+	componentEnvVar := map[string]string{"name": "ONI_COMPONENT",  "value": component}
+	envArray = append(envArray, componentEnvVar)
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(envArray, "env")
+
+	// Remove health checking to allow debugger to run without Pods failing
+	var empty struct{}
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(empty, "livenessProbe")
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(empty, "readinessProbe")
+	fmt.Println(jsonParsed.String())
+
 }
 
 func deleteCleanObj() {

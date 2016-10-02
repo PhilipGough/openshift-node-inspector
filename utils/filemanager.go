@@ -9,10 +9,6 @@ import (
 
 const basePath string = "/tmp/oni/"
 
-func ReadCurrentObjectFile(component string, objectType string) {
-
-}
-
 func SaveCleanFile(component string, objectType string, prefix string) {
 	cmd := exec.Command("oc", "get", objectType, component, "-o", "json")
 	os.MkdirAll(basePath+component, 0777)
