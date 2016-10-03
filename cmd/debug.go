@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/Jeffail/gabs"
+	"github.com/philipgough/openshift-node-inspector/utils"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"github.com/Jeffail/gabs"
-	"github.com/philipgough/openshift-node-inspector/utils"
 )
 
 type ServicePort struct {
@@ -19,6 +19,7 @@ type ServicePort struct {
 var objectType string
 var component string
 var port int
+var image string
 
 func CreateDebugService(nodeComponent string, debugPort int) {
 	objectType = "svc"
@@ -57,10 +58,11 @@ func createDebugSvcFile() {
 	utils.WriteDebugFile(jsonParsed.String(), component, objectType)
 }
 
-func CreateDebugDeploymentConfig(nodeComponent string, debugPort int) {
+func CreateDebugDeploymentConfig(nodeComponent string, debugPort int, imageName string) {
 	objectType = "dc"
 	component = nodeComponent
 	port = debugPort
+	image = imageName
 	createDebugDcFile()
 
 }
@@ -89,13 +91,13 @@ func createDebugDcFile() {
 	}
 	niPortMap := map[string]interface{}{"containerPort": port, "protocol": "TCP"}
 	array = append(array, niPortMap)
-	debugListenerPortMap :=  map[string]interface{}{"containerPort": 5858, "protocol": "TCP"}
+	debugListenerPortMap := map[string]interface{}{"containerPort": 5858, "protocol": "TCP"}
 	array = append(array, debugListenerPortMap)
 	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(array, "ports")
 
-	// Add the "cmd" Array to overwrite the Dockerfile CMD definition
+	// Add the "command" Array to overwrite the Dockerfile CMD definition
 	commands := []string{"bash", "-c", "chmod +x /tmp/openshift-node-inspector/start.sh && /tmp/openshift-node-inspector/start.sh"}
-	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(commands, "cmd")
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(commands, "command")
 
 	// Make the component name available as an environment variable to the container
 	envArray, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("env").Data().([]interface{})
@@ -105,15 +107,28 @@ func createDebugDcFile() {
 		os.Exit(2)
 	}
 
-	componentEnvVar := map[string]string{"name": "ONI_COMPONENT",  "value": component}
+	componentEnvVar := map[string]string{"name": "ONI_COMPONENT", "value": component}
 	envArray = append(envArray, componentEnvVar)
 	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(envArray, "env")
 
-	// Remove health checking to allow debugger to run without Pods failing
-	var empty struct{}
-	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(empty, "livenessProbe")
-	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(empty, "readinessProbe")
-	fmt.Println(jsonParsed.String())
+	// Remove health checking to allow debugger to run without Pods reporting unreachable
+	children, _ := jsonParsed.S("spec", "template", "spec", "containers").Index(0).ChildrenMap()
+	for key, _ := range children {
+		if key == "livenessProbe" || key == "readinessProbe" {
+			delete(children, key)
+		}
+	}
+
+	if image == "" {
+		value, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("image").Data().(string)
+		if ok {
+			jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(utils.ConfirmImage(value, true), "image")
+		}
+	} else {
+		jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(utils.ConfirmImage(image, false), "image")
+	}
+
+	utils.WriteDebugFile(jsonParsed.String(), component, objectType)
 
 }
 
@@ -126,7 +141,7 @@ func deleteCleanObj() {
 		os.Exit(2)
 	}
 
-	fmt.Printf("Existing service for %s removed \n", component)
+	fmt.Printf("Existing %s for %s removed \n", objectType, component)
 }
 
 func createDebugObj() {
@@ -134,6 +149,7 @@ func createDebugObj() {
 	path := utils.GetFilePath(component, objectType, "/debug")
 	err := exec.Command("oc", "create", "-f", path).Run()
 	if err != nil {
+		fmt.Println(err)
 		fmt.Printf("Error creating new  %s  for %s. Exiting ...", objectType, component)
 		os.Exit(2)
 	}

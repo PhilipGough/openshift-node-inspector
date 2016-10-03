@@ -9,7 +9,8 @@ import (
 
 const basePath string = "/tmp/oni/"
 
-func SaveCleanFile(component string, objectType string, prefix string) {
+func SaveCleanFile(component string, objectType string) {
+	const prefix = "/clean"
 	cmd := exec.Command("oc", "get", objectType, component, "-o", "json")
 	os.MkdirAll(basePath+component, 0777)
 	outfile, err := os.Create(basePath + component + prefix + objectType + ".json")
@@ -36,8 +37,8 @@ func GetFilePath(component string, objectType string, prefix string) string {
 }
 
 func WriteDebugFile(contents string, component string, objectType string) {
-
-	file, err := os.Create(basePath + component + "/debug" + objectType + ".json")
+	const prefix = "/debug"
+	file, err := os.Create(basePath + component + prefix + objectType + ".json")
 
 	if err != nil {
 		fmt.Printf("Error creating debug file for %s %s. Aborting ...", objectType, component)
