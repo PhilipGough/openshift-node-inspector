@@ -7,11 +7,13 @@ import (
 	"strings"
 )
 
+var restrictedList =  []string{"millicore", "gitlab-shell", "mysql", "redis", "ups", "memcached"}
+
 func ValidateInput(cliArg string, objectType string) {
 	fmt.Println("Validating input...")
 
-	if cliArg == "millicore" {
-		fmt.Println("Theres always one...")
+	if isRestricted(cliArg) {
+		fmt.Printf("%s is not a Node component", cliArg)
 		os.Exit(1)
 	}
 
@@ -28,3 +30,13 @@ func ValidateInput(cliArg string, objectType string) {
 	}
 
 }
+
+
+ func isRestricted(userInput string) bool {
+ 	for _, value := range restrictedList {
+ 		if value == userInput {
+ 			return true
+ 		}
+ 	}
+ 	return false
+ }
