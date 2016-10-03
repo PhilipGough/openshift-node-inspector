@@ -55,3 +55,15 @@ func WriteDebugFile(contents string, component string, objectType string) {
 	file.Close()
 	fmt.Printf("Debug file created for %s %s \n", objectType, component)
 }
+
+func CreateDebugObj(objectType string, component string) {
+	fmt.Printf("Creating new debug %s for %s \n", objectType, component)
+	path := GetFilePath(component, objectType, "/debug")
+	err := exec.Command("oc", "create", "-f", path).Run()
+	if err != nil {
+		fmt.Println(err)
+		fmt.Printf("Error creating new  %s  for %s. Exiting ...", objectType, component)
+		os.Exit(2)
+	}
+	fmt.Printf("Debug %s for %s created \n", objectType, component)
+}

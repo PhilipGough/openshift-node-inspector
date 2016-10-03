@@ -84,32 +84,27 @@ func createDebugDcFile() {
 
 	// Add the additional definitions to the ports Array
 	array, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("ports").Data().([]interface{})
-
 	if !ok {
 		fmt.Printf("Error parsing existing %s %s JSON file. Value not an array \n", component, objectType)
 		os.Exit(2)
 	}
-	niPortMap := map[string]interface{}{"containerPort": port, "protocol": "TCP"}
-	array = append(array, niPortMap)
-	debugListenerPortMap := map[string]interface{}{"containerPort": 5858, "protocol": "TCP"}
-	array = append(array, debugListenerPortMap)
+	array = utils.UpdateContainerPorts(array, port)
 	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(array, "ports")
-
-	// Add the "command" Array to overwrite the Dockerfile CMD definition
-	commands := []string{"bash", "-c", "chmod +x /tmp/openshift-node-inspector/start.sh && /tmp/openshift-node-inspector/start.sh"}
-	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(commands, "command")
 
 	// Make the component name available as an environment variable to the container
 	envArray, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("env").Data().([]interface{})
-
 	if !ok {
 		fmt.Printf("Error parsing existing %s %s JSON file. Value not an array \n", component, objectType)
 		os.Exit(2)
 	}
-
-	componentEnvVar := map[string]string{"name": "ONI_COMPONENT", "value": component}
-	envArray = append(envArray, componentEnvVar)
+	envArray = utils.AddComponentEnvVar(envArray, component)
 	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(envArray, "env")
+
+	// Add the "command" Array to overwrite the Dockerfile CMD definition
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(utils.UpdateDockerCMD(), "command")
+
+	// Add the node inspector source as a volume
+	jsonParsed.ArrayAppend(utils.CreateNodeInspectorVolume(), "spec", "template", "spec", "volumes")
 
 	// Remove health checking to allow debugger to run without Pods reporting unreachable
 	children, _ := jsonParsed.S("spec", "template", "spec", "containers").Index(0).ChildrenMap()
@@ -133,25 +128,14 @@ func createDebugDcFile() {
 }
 
 func deleteCleanObj() {
-	defer createDebugObj()
+	defer utils.CreateDebugObj(objectType, component)
 	err := exec.Command("oc", "delete", objectType, component).Run()
 
 	if err != nil {
+		fmt.Println(err)
 		fmt.Printf("Error deleting old  %s  for %s. Exiting ...", objectType, component)
 		os.Exit(2)
 	}
 
 	fmt.Printf("Existing %s for %s removed \n", objectType, component)
-}
-
-func createDebugObj() {
-	fmt.Printf("Creating new debug %s for %s \n", objectType, component)
-	path := utils.GetFilePath(component, objectType, "/debug")
-	err := exec.Command("oc", "create", "-f", path).Run()
-	if err != nil {
-		fmt.Println(err)
-		fmt.Printf("Error creating new  %s  for %s. Exiting ...", objectType, component)
-		os.Exit(2)
-	}
-	fmt.Printf("Debug %s for %s created \n", objectType, component)
 }

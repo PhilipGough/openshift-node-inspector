@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var restrictedList =  []string{"millicore", "gitlab-shell", "mysql", "redis", "ups", "memcached"}
+var restrictedList = []string{"millicore", "gitlab-shell", "mysql", "redis", "ups", "memcached"}
 
 func ValidateInput(cliArg string, objectType string) {
 	fmt.Println("Validating input...")
@@ -31,12 +31,11 @@ func ValidateInput(cliArg string, objectType string) {
 
 }
 
-
- func isRestricted(userInput string) bool {
- 	for _, value := range restrictedList {
- 		if value == userInput {
- 			return true
- 		}
- 	}
- 	return false
- }
+func isRestricted(userInput string) bool {
+	for _, value := range restrictedList {
+		if value == userInput {
+			return true
+		}
+	}
+	return false
+}
