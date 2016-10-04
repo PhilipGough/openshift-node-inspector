@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 )
 
 type Route struct {

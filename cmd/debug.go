@@ -104,24 +104,24 @@ func createDebugDcFile() {
 	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(utils.UpdateDockerCMD(), "command")
 
 	// Add the node inspector source as a volume
-	jsonParsed.ArrayAppend(utils.CreateNodeInspectorVolume(), "spec", "template", "spec", "volumes")
+	_, exists := jsonParsed.S("spec", "template", "spec", "volumes").Data().([]interface{})
+	if !exists {
+		jsonParsed.S("spec", "template", "spec").ArrayOfSize(1, "volumes")
+		jsonParsed.S("spec", "template", "spec", "volumes").SetIndex(utils.CreateNodeInspectorVolume(), 0)
+	} else {
+		jsonParsed.ArrayAppend(utils.CreateNodeInspectorVolume(), "spec", "template", "spec", "volumes")
+	}
 
 	//Mount volume inside container
-	volumeArray, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("volumeMounts").Data().([]interface{})
+	volumeMntArray, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("volumeMounts").Data().([]interface{})
 	if !ok {
-		jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(utils.CreateContainerMount(), "volumeMounts")
-	} else {
-		volumeArray = utils.MountContainerVolume(volumeArray)
-		jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(volumeArray, "volumeMounts")
+		jsonParsed.S("spec", "template", "spec", "containers").Index(0).ArrayOfSize(1, "volumeMounts")
 	}
+	volumeMntArray = utils.MountContainerVolume(volumeMntArray)
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(volumeMntArray, "volumeMounts")
 
-	// Remove health checking to allow debugger to run without Pods reporting unreachable
-	children, _ := jsonParsed.S("spec", "template", "spec", "containers").Index(0).ChildrenMap()
-	for key, _ := range children {
-		if key == "livenessProbe" || key == "readinessProbe" {
-			delete(children, key)
-		}
-	}
+	// Adjust health checks
+	jsonParsed.S("spec", "template", "spec", "containers").Index(0).SetP(1000, "livenessProbe.initialDelaySeconds")
 
 	if image == "" {
 		value, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("image").Data().(string)
