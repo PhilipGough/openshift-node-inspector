@@ -26,6 +26,7 @@ func main() {
 				}
 				cmd.CreateDebugService(args[0], debugPort)
 				cmd.CreateDebugDeploymentConfig(args[0], debugPort, image)
+				utils.RouteConstructor(args[0])
 			} else {
 				fmt.Println("Component must be provided with debug command. \n Use --help for more info")
 			}
