@@ -32,7 +32,7 @@ func CreateDebugService(nodeComponent string, debugPort int) {
 }
 
 func createDebugSvcFile() {
-	defer deleteCleanObj()
+	defer utils.CreateDebugObj("update", objectType, component)
 	file, err := ioutil.ReadFile(utils.GetFilePath(component, objectType, "/clean"))
 	if err != nil {
 		fmt.Printf("Error reading %s file for %s. Exiting ...", objectType, component)
@@ -72,8 +72,7 @@ func CreateDebugDeploymentConfig(nodeComponent string, debugPort int, imageName 
 }
 
 func createDebugDcFile() {
-	defer deleteCleanObj()
-
+	defer utils.CreateDebugObj("update", objectType, component)
 	file, err := ioutil.ReadFile(utils.GetFilePath(component, objectType, "/clean"))
 	if err != nil {
 		fmt.Printf("Error reading %s file for %s. Exiting ...", objectType, component)
@@ -85,7 +84,6 @@ func createDebugDcFile() {
 		fmt.Printf("Error parsing existing %s %s JSON file. Exiting ... \n", component, objectType)
 		os.Exit(2)
 	}
-
 	// Add the additional definitions to the ports Array
 	array, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("ports").Data().([]interface{})
 	if !ok {
@@ -141,7 +139,6 @@ func createDebugDcFile() {
 }
 
 func deleteCleanObj() {
-	defer utils.CreateDebugObj(objectType, component)
 	err := exec.Command("oc", "delete", objectType, component).Run()
 
 	if err != nil {

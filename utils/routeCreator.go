@@ -31,7 +31,7 @@ type RoutePortTarget struct {
 }
 
 func RouteConstructor(component string) {
-	defer CreateDebugObj("route", component)
+	defer CreateDebugObj("create", "route", component)
 	targetPort := RoutePortTarget{Target: "node-inspector"}
 	routeTarget := RouteTarget{Kind: "Service", Name: component}
 	routeSpec := RouteSpec{Target: routeTarget, PortTarget: targetPort}
