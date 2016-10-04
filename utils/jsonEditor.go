@@ -9,7 +9,7 @@ func UpdateContainerPorts(parsedArray []interface{}, port int) []interface{} {
 }
 
 func UpdateDockerCMD() []string {
-	commands := []string{"bash", "-c", "chmod +x /tmp/openshift-node-inspector/start.sh && /tmp/openshift-node-inspector/start.sh"}
+	commands := []string{"bash", "-c", "bash /tmp/openshift-node-inspector/start.sh"}
 	return commands
 }
 
