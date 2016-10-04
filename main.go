@@ -12,6 +12,7 @@ func main() {
 
 	var debugPort int
 	var image string
+	var niSrc string
 
 	var cmdDebug = &cobra.Command{
 		Use:   "debug [component to debug]",
@@ -25,7 +26,7 @@ func main() {
 					utils.SaveCleanFile(args[0], value)
 				}
 				cmd.CreateDebugService(args[0], debugPort)
-				cmd.CreateDebugDeploymentConfig(args[0], debugPort, image)
+				cmd.CreateDebugDeploymentConfig(args[0], debugPort, image, niSrc)
 				utils.RouteConstructor(args[0])
 			} else {
 				fmt.Println("Component must be provided with debug command. \n Use --help for more info")
@@ -47,6 +48,7 @@ func main() {
 	var rootCmd = &cobra.Command{Use: "openshift-node-inspector"}
 	cmdDebug.Flags().IntVarP(&debugPort, "port", "p", 9000, "Port to set debugger web host")
 	cmdDebug.Flags().StringVarP(&image, "image", "i", "", "Image to use (should include :tag) - Defaults to current deployment config")
+	cmdDebug.Flags().StringVarP(&niSrc, "src", "s", "https://github.com/PhilipGough/openshift-node-inspector-src", "Source code for Node Inspector to mount inside container")
 	rootCmd.AddCommand(cmdDebug, cmdClean)
 	rootCmd.Execute()
 

@@ -18,7 +18,7 @@ func UpdateContainerPorts(parsedArray []interface{}, port int) []interface{} {
 }
 
 func UpdateDockerCMD() []string {
-	commands := []string{"bash", "-c", "bash /tmp/openshift-node-inspector/start.sh"}
+	commands := []string{"bash", "-c", "bash /tmp/openshift-node-inspector-src/start.sh"}
 	return commands
 }
 
@@ -28,8 +28,8 @@ func AddComponentEnvVar(parsedArray []interface{}, component string) []interface
 	return parsedArray
 }
 
-func CreateNodeInspectorVolume() VolumeDefinition {
-	volumeSrc := VolumeSrcDefinition{URL: "https://github.com/PhilipGough/openshift-node-inspector"}
+func CreateNodeInspectorVolume(src string) VolumeDefinition {
+	volumeSrc := VolumeSrcDefinition{URL: src}
 	volumeSpec := VolumeDefinition{Name: "node-inspector-src", Src: volumeSrc}
 	return volumeSpec
 }
