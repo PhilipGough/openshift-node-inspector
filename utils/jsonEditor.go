@@ -7,6 +7,8 @@ type VolumeDefinition struct {
 
 type VolumeSrcDefinition struct {
 	URL string `json:"repository"`
+	Commit string `json:"revision, omitempty"`
+
 }
 
 func UpdateContainerPorts(parsedArray []interface{}, port int) []interface{} {
@@ -28,8 +30,8 @@ func AddComponentEnvVar(parsedArray []interface{}, component string) []interface
 	return parsedArray
 }
 
-func CreateNodeInspectorVolume(src string) VolumeDefinition {
-	volumeSrc := VolumeSrcDefinition{URL: src}
+func CreateNodeInspectorVolume(src string, hash string) VolumeDefinition {
+	volumeSrc := VolumeSrcDefinition{URL:src, Commit:hash}
 	volumeSpec := VolumeDefinition{Name: "node-inspector-src", Src: volumeSrc}
 	return volumeSpec
 }

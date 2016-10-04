@@ -21,6 +21,7 @@ var component string
 var port int
 var image string
 var niSrc string
+var commitHash string
 
 func CreateDebugService(nodeComponent string, debugPort int) {
 	objectType = "svc"
@@ -59,12 +60,13 @@ func createDebugSvcFile() {
 	utils.WriteDebugFile(jsonParsed.String(), component, objectType)
 }
 
-func CreateDebugDeploymentConfig(nodeComponent string, debugPort int, imageName string, src string) {
+func CreateDebugDeploymentConfig(nodeComponent string, debugPort int, imageName string, src string, hash string) {
 	objectType = "dc"
 	component = nodeComponent
 	port = debugPort
 	image = imageName
 	niSrc = src
+	commitHash = hash
 	createDebugDcFile()
 
 }
@@ -109,9 +111,9 @@ func createDebugDcFile() {
 	_, exists := jsonParsed.S("spec", "template", "spec", "volumes").Data().([]interface{})
 	if !exists {
 		jsonParsed.S("spec", "template", "spec").ArrayOfSize(1, "volumes")
-		jsonParsed.S("spec", "template", "spec", "volumes").SetIndex(utils.CreateNodeInspectorVolume(niSrc), 0)
+		jsonParsed.S("spec", "template", "spec", "volumes").SetIndex(utils.CreateNodeInspectorVolume(niSrc, commitHash), 0)
 	} else {
-		jsonParsed.ArrayAppend(utils.CreateNodeInspectorVolume(niSrc), "spec", "template", "spec", "volumes")
+		jsonParsed.ArrayAppend(utils.CreateNodeInspectorVolume(niSrc, commitHash), "spec", "template", "spec", "volumes")
 	}
 
 	//Mount volume inside container
