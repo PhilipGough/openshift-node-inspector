@@ -1,5 +1,15 @@
 package utils
 
+type VolumeDefinition struct {
+	Name string `json:"name"`
+	Src VolumeSrcDefinition  `json:"gitRepo"`
+}
+
+type VolumeSrcDefinition struct {
+	URL string `json:"repository"`
+}
+
+
 func UpdateContainerPorts(parsedArray []interface{}, port int) []interface{} {
 	niPortMap := map[string]interface{}{"containerPort": port, "protocol": "TCP"}
 	parsedArray = append(parsedArray, niPortMap)
@@ -18,3 +28,26 @@ func AddComponentEnvVar(parsedArray []interface{}, component string) []interface
 	parsedArray = append(parsedArray, componentEnvVar)
 	return parsedArray
 }
+
+
+
+func CreateNodeInspectorVolume() VolumeDefinition {
+	volumeSrc := VolumeSrcDefinition{URL:"https://github.com/PhilipGough/openshift-node-inspector"}
+	volumeSpec := VolumeDefinition{Name:"node-inspector-src", Src:volumeSrc}
+	return volumeSpec
+}
+
+
+func MountContainerVolume(parsedArray []interface{}) []interface{} {
+	nodeInspectorMount := map[string]string{"name":"node-inspector-src","mountPath": "/tmp"}
+	parsedArray = append(parsedArray, nodeInspectorMount)
+	return parsedArray
+}
+
+func CreateContainerMount() []map[string]string {
+	volumeMountArray := make([]map[string]string, 0)
+	nodeInspectorMount := map[string]string{"name":"node-inspector-src","mountPath": "/tmp"}
+	volumeMountArray[0] = nodeInspectorMount
+	return volumeMountArray
+}
+

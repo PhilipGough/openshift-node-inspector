@@ -106,6 +106,15 @@ func createDebugDcFile() {
 	// Add the node inspector source as a volume
 	jsonParsed.ArrayAppend(utils.CreateNodeInspectorVolume(), "spec", "template", "spec", "volumes")
 
+	//Mount volume inside container
+	volumeArray, ok := jsonParsed.S("spec", "template", "spec", "containers").Index(0).S("volumeMounts").Data().([]interface{})
+	if !ok {
+		jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(utils.CreateContainerMount(), "volumeMounts")
+	} else {
+		volumeArray = utils.MountContainerVolume(volumeArray)
+		jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(volumeArray, "volumeMounts")
+	}
+
 	// Remove health checking to allow debugger to run without Pods reporting unreachable
 	children, _ := jsonParsed.S("spec", "template", "spec", "containers").Index(0).ChildrenMap()
 	for key, _ := range children {
