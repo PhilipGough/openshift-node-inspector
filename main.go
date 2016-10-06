@@ -5,7 +5,6 @@ import (
 	"github.com/philipgough/openshift-node-inspector/cmd"
 	"github.com/philipgough/openshift-node-inspector/utils"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 func main() {
@@ -41,8 +40,16 @@ func main() {
 		Long: `print is for printing anything back to the screen.
 	    			For many years people have printed back to the screen.
 	    			`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Print: " + strings.Join(args, " "))
+		Run: func(cmnd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				objects := []string{"svc", "dc"}
+				for _, value := range objects {
+					utils.ValidateInput(args[0], value)
+				}
+				cmd.Cleanup(args[0])
+			} else {
+				fmt.Println("Component must be provided with debug command. \n Use --help for more info")
+			}
 		},
 	}
 

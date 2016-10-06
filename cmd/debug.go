@@ -6,7 +6,6 @@ import (
 	"github.com/philipgough/openshift-node-inspector/utils"
 	"io/ioutil"
 	"os"
-	"os/exec"
 )
 
 type ServicePort struct {
@@ -136,16 +135,4 @@ func createDebugDcFile() {
 
 	utils.WriteDebugFile(jsonParsed.String(), component, objectType)
 
-}
-
-func deleteCleanObj() {
-	err := exec.Command("oc", "delete", objectType, component).Run()
-
-	if err != nil {
-		fmt.Println(err)
-		fmt.Printf("Error deleting old  %s  for %s. Exiting ...", objectType, component)
-		os.Exit(2)
-	}
-
-	fmt.Printf("Existing %s for %s removed \n", objectType, component)
 }

@@ -56,7 +56,7 @@ func WriteDebugFile(contents string, component string, objectType string) {
 	fmt.Printf("Debug file created for %s %s \n", objectType, component)
 }
 
-func CreateDebugObj(command string,objectType string, component string) {
+func CreateDebugObj(command string, objectType string, component string) {
 	fmt.Printf("Creating new debug %s for %s \n", objectType, component)
 	path := GetFilePath(component, objectType, "/debug")
 	err := exec.Command("oc", command, "-f", path).Run()

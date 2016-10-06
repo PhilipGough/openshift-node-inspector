@@ -10,7 +10,6 @@ import (
 var restrictedList = []string{"millicore", "gitlab-shell", "mysql", "redis", "ups", "memcached"}
 
 func ValidateInput(cliArg string, objectType string) {
-	fmt.Println("Validating input...")
 
 	if isRestricted(cliArg) {
 		fmt.Printf("%s is not a Node component", cliArg)
