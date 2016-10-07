@@ -15,6 +15,11 @@ the Node Inspector to be exposed for that service.
 2. The user is logged and is using the appropriate project
 3. The appropriate Security Context Constraint has "gitRepo" allowed as a Volume
 
+### Install
+
+```bash
+go get github.com/PhilipGough/openshift-node-inspector
+````
 
 ### Using the tool
 
