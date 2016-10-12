@@ -62,7 +62,7 @@ func CreateDebugObj(command string, objectType string, component string) {
 	err := exec.Command("oc", command, "-f", path).Run()
 	if err != nil {
 		fmt.Println(err)
-		fmt.Printf("Error creating new  %s  for %s. Exiting ...", objectType, component)
+		fmt.Printf("Error creating new  %s  for %s. \n", objectType, component)
 	}
 	fmt.Printf("Debug %s for %s created \n", objectType, component)
 }

@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"strconv"
+)
+
 type VolumeDefinition struct {
 	Name string              `json:"name"`
 	Src  VolumeSrcDefinition `json:"gitRepo"`
@@ -26,7 +30,7 @@ func UpdateDockerCMD() []string {
 func AddEnvVars(parsedArray []interface{}, component string, port int) []interface{} {
 	componentEnvVar := map[string]string{"name": "ONI_COMPONENT", "value": component}
 	parsedArray = append(parsedArray, componentEnvVar)
-	portEnvVar := map[string]string{"name": "ONI_DEBUG_PORT", "value": port}
+	portEnvVar := map[string]string{"name": "ONI_DEBUG_PORT", "value": strconv.Itoa(port)}
 	parsedArray = append(parsedArray, portEnvVar)
 	return parsedArray
 }
