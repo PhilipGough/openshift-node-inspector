@@ -23,9 +23,11 @@ func UpdateDockerCMD() []string {
 	return commands
 }
 
-func AddComponentEnvVar(parsedArray []interface{}, component string) []interface{} {
+func AddEnvVars(parsedArray []interface{}, component string, port int) []interface{} {
 	componentEnvVar := map[string]string{"name": "ONI_COMPONENT", "value": component}
 	parsedArray = append(parsedArray, componentEnvVar)
+	portEnvVar := map[string]string{"name": "ONI_DEBUG_PORT", "value": port}
+	parsedArray = append(parsedArray, portEnvVar)
 	return parsedArray
 }
 

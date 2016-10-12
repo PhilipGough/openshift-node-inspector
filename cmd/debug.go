@@ -98,7 +98,7 @@ func createDebugDcFile() {
 		fmt.Printf("Error parsing existing %s %s JSON file. Value not an array \n", component, objectType)
 		os.Exit(2)
 	}
-	envArray = utils.AddComponentEnvVar(envArray, component)
+	envArray = utils.AddEnvVars(envArray, component, port)
 	jsonParsed.S("spec", "template", "spec", "containers").Index(0).Set(envArray, "env")
 
 	// Add the "command" Array to overwrite the Dockerfile CMD definition
