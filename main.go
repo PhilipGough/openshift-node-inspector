@@ -17,7 +17,7 @@ func main() {
 	var cmdDebug = &cobra.Command{
 		Use:   "debug [component to debug]",
 		Short: "Debug component with Node Inspector",
-		Long:  `Debug allows you to debug Node components running on OPenShift using Node Inspector`,
+		Long:  `Debug allows you to debug Node components running on OpenShift using Node Inspector`,
 		Run: func(cmnd *cobra.Command, args []string) {
 			if len(args) > 0 {
 				objects := []string{"svc", "dc"}
