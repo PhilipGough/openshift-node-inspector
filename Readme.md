@@ -15,7 +15,27 @@ the Node Inspector to be exposed for that service.
 2. The user is logged and is using the appropriate project
 3. The appropriate Security Context Constraint has "gitRepo" allowed as a Volume
 
-### Install
+### Install from Binary
+
+Binaries are provided for Linux and Mac OS
+
+_For Linux_
+
+```bash
+wget https://github.com/PhilipGough/openshift-node-inspector/releases/download/v0.1.0-alpha/oni-linux-amd64 -O /usr/bin/openshift-node-inspector
+
+cd /usr/bin && sudo chmod 0777 openshift-node-inspector
+```
+
+_For Mac_
+
+```bash
+wget https://github.com/PhilipGough/openshift-node-inspector/releases/download/v0.1.0-alpha/oni-darwin-amd64 -O /usr/bin/openshift-node-inspector
+
+cd /usr/bin && sudo chmod 0777 openshift-node-inspector
+```
+
+### Building
 
 ```bash
 go get github.com/PhilipGough/openshift-node-inspector
