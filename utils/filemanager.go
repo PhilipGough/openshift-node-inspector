@@ -57,12 +57,14 @@ func WriteDebugFile(contents string, component string, objectType string) {
 }
 
 func CreateDebugObj(command string, objectType string, component string) {
-	fmt.Printf("Creating new debug %s for %s \n", objectType, component)
+	fmt.Printf("Attempting to create new debug %s for %s \n", objectType, component)
 	path := GetFilePath(component, objectType, "/debug")
 	err := exec.Command("oc", command, "-f", path).Run()
 	if err != nil {
 		fmt.Println(err)
 		fmt.Printf("Error creating new  %s  for %s. \n", objectType, component)
+	} else {
+		fmt.Printf("Debug %s for %s created \n", objectType, component)
 	}
-	fmt.Printf("Debug %s for %s created \n", objectType, component)
+
 }
